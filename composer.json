@@ -1,0 +1,35 @@
+{
+    "name": "ramsalt/oauth2-amedia-aid",
+    "description": "aMedia aID OAuth 2.0 Client Provider for The PHP League OAuth2-Client",
+    "license": "GPL-3.0-or-later",
+    "authors": [
+        {
+            "name": "Marlon Saglia",
+            "email": "marlon@ramsalt.com"
+        }
+    ],
+    "keywords": [
+        "oauth2",
+        "client",
+        "authorization",
+        "aid",
+        "amedia"
+    ],
+    "require": {
+        "league/oauth2-client": " ^2.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^7.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "Ramsalt\\OAuth2\\Client\\": "src/",
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Ramsalt\\OAuth2\\Client\\Amedia\\Test\\": "tests/src/"
+        }
+    },
+    "minimum-stability": "stable"
+}
