@@ -2,7 +2,7 @@
 
 namespace Ramsalt\OAuth2\Client\Provider;
 
-use AmediaId\Api\ataModel\Profile;
+use AmediaId\Api\DataModel\Profile;
 use League\OAuth2\Client\Provider\AbstractProvider;
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use League\OAuth2\Client\Provider\ResourceOwnerInterface;
@@ -84,6 +84,16 @@ class AmediaAid extends AbstractProvider {
   }
 
   /**
+   * Returns the string that should be used to separate scopes when building
+   * the URL for requesting an access token.
+   *
+   * @return string Scope separator, defaults to ' ', which encoded with RFC1738 becomes a `+`
+   */
+  protected function getScopeSeparator() {
+    return ' ';
+  }
+
+  /**
    * Checks a provider response for errors.
    *
    * @throws IdentityProviderException
@@ -108,6 +118,19 @@ class AmediaAid extends AbstractProvider {
    */
   protected function createResourceOwner(array $response, AccessToken $token) {
     return Profile::createFromApiResponse($response);
+  }
+
+  /**
+   * Build a query string from an array.
+   *
+   * @note aMedia aID seems to use RFC1738 instead of oauth2 standard RFC3986
+   *
+   * @param array $params
+   *
+   * @return string
+   */
+  protected function buildQueryString(array $params) {
+    return http_build_query($params, null, '&', \PHP_QUERY_RFC1738);
   }
 
 
@@ -137,4 +160,21 @@ class AmediaAid extends AbstractProvider {
     return sprintf('https://%s/%s/%s', self::BASE_DOMAIN, self::BASE_API_PATH, $path);
   }
 
+
+  /**
+   * Attempts to refresh an access token.
+   *
+   * @param \League\OAuth2\Client\Token\AccessToken $accessToken
+   *
+   * @return \League\OAuth2\Client\Token\AccessToken
+   *   The renewed access_token and relative refresh_token.
+   */
+  public function refreshAccessToken(AccessToken $accessToken) {
+    $fresh_access_token = $this->getAccessToken(
+      'refresh_token',
+      ['refresh_token' => $accessToken->getRefreshToken(),]
+    );
+
+    return $fresh_access_token;
+  }
 }
