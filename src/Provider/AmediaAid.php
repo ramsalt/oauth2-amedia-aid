@@ -7,6 +7,7 @@ use League\OAuth2\Client\Provider\AbstractProvider;
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use League\OAuth2\Client\Provider\ResourceOwnerInterface;
 use League\OAuth2\Client\Token\AccessToken;
+use League\OAuth2\Client\Tool\BearerAuthorizationTrait;
 use Psr\Http\Message\ResponseInterface;
 
 /**
@@ -15,6 +16,8 @@ use Psr\Http\Message\ResponseInterface;
  * @package Ramsalt\OAuth2\Client\Provider
  */
 class AmediaAid extends AbstractProvider {
+
+  use BearerAuthorizationTrait;
 
   protected $isTesting = FALSE;
 
@@ -67,6 +70,14 @@ class AmediaAid extends AbstractProvider {
     return $this->getApiUrl('users/me');
   }
 
+  protected function getDefaultHeaders() {
+    $http_headers = parent::getDefaultHeaders();
+
+    $http_headers['accept'] = 'application/json';
+
+    return $http_headers;
+  }
+
   /**
    * Returns the default scopes used by this provider.
    *
@@ -103,6 +114,10 @@ class AmediaAid extends AbstractProvider {
    */
   protected function checkResponse(ResponseInterface $response, $data) {
     $statusCode = $response->getStatusCode();
+    // Status code is in the "Ok" range.
+    if (200 <= $statusCode && $statusCode < 300) {
+
+    }
     xdebug_break();
     $r = $response;
     $d = $data;
