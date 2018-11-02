@@ -118,7 +118,6 @@ class AmediaAid extends AbstractProvider {
     if (200 <= $statusCode && $statusCode < 300) {
 
     }
-    xdebug_break();
     $r = $response;
     $d = $data;
   }
@@ -179,12 +178,16 @@ class AmediaAid extends AbstractProvider {
   /**
    * Attempts to refresh an access token.
    *
+   * @todo: this is not currently supported by aMedia
+   *
    * @param \League\OAuth2\Client\Token\AccessToken $accessToken
    *
    * @return \League\OAuth2\Client\Token\AccessToken
    *   The renewed access_token and relative refresh_token.
    */
-  public function refreshAccessToken(AccessToken $accessToken) {
+  private function refreshAccessToken(AccessToken $accessToken) {
+    throw new \BadMethodCallException('Refreshing token is not yet supported');
+
     $fresh_access_token = $this->getAccessToken(
       'refresh_token',
       ['refresh_token' => $accessToken->getRefreshToken(),]
