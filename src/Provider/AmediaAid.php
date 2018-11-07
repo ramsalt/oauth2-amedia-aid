@@ -19,8 +19,6 @@ class AmediaAid extends AbstractProvider {
 
   use BearerAuthorizationTrait;
 
-  protected $isTesting = FALSE;
-
   protected const BASE_DOMAIN = 'www.aid.no';
   protected const BASE_OAUTH_PATH = 'api/portunus/v1/oauth';
   protected const BASE_API_PATH = 'api/mercury/v2';
