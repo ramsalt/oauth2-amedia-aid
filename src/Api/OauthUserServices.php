@@ -3,84 +3,108 @@
 
 namespace AmediaId\Api;
 
-
+use AmediaId\Api\DataModel\AccessFeatureType;
+use AmediaId\Api\DataModel\GroupList;
+use AmediaId\Api\DataModel\PrivacyInfo;
 use AmediaId\Api\DataModel\Profile;
+use AmediaId\Api\DataModel\PublicationList;
+use AmediaId\Api\DataModel\SubscriptionList;
 use League\OAuth2\Client\Token\AccessTokenInterface;
+use Ramsalt\OAuth2\Client\Provider\AmediaAid;
 
-class OauthUserServices implements OauthServicesInterface {
+class OauthUserServices extends AmediaAid implements OauthUserServicesInterface {
 
-  /**
-   * @var \League\OAuth2\Client\Token\AccessTokenInterface
-   */
-  protected $accessToken;
+  protected const ENDPOINT_USERS = self::API_URL_V2_MERCURY . '/users';
+
+  protected const ENDPOINT_FEATURES = self::API_URL_V1_JUPITER . '/access_features';
 
   /**
    * @inheritDoc
    */
-  public function __construct(AccessTokenInterface $access_token) {
-    $this->accessToken = $access_token;
+  protected function getDefaultScopes() {
+    // Add required extra scopes.
+    return [
+        'groups',
+        'privacy_preferences',
+        'access',
+      ] + parent::getDefaultScopes();
   }
 
   /**
    * @inheritDoc
    */
-  public function getUserInfo(string $uuid = self::UUID_ME): Profile {
-    throw new \RuntimeException("Not implemented");
+  public function getUserInfo(AccessTokenInterface $access_token): Profile {
+    return $this->getResourceOwner($access_token);
   }
 
   /**
    * @inheritDoc
    */
-  public function findUserByName(string $username): Profile {
-    throw new \RuntimeException("Not implemented");
+  public function getUserGroupList(AccessTokenInterface $access_token): GroupList {
+    throw new \RuntimeException("Not implemented.");
   }
 
   /**
    * @inheritDoc
    */
-  public function userExists(string $username): bool {
-    throw new \RuntimeException("Not implemented");
+  public function getUserPrivacyPreferences(AccessTokenInterface $access_token): PrivacyInfo {
+    throw new \RuntimeException("Not implemented.");
   }
 
   /**
    * @inheritDoc
    */
-  public function getUserGroupList(string $uuid = self::UUID_ME): GroupList {
-    throw new \RuntimeException("Not implemented");
+  public function getUserSubscriptionList(AccessTokenInterface $access_token): SubscriptionList {
+    throw new \RuntimeException("Not implemented.");
   }
 
   /**
    * @inheritDoc
    */
-  public function getPrivacyPrefences(string $uuid = self::UUID_ME): PrivacyInfo {
-    throw new \RuntimeException("Not implemented");
+  public function userHasAccess(AccessTokenInterface $access_token, string $domain, $features, $require_all = TRUE): bool {
+    // Ensure we always handle a aray of Access Features.
+    if (!is_array($features)) {
+      $features = [$features];
+    }
+
+    $feature_list = implode(',', AccessFeatureType::featureListToStringArray($features));
+    $path_components = [
+      self::ENDPOINT_FEATURES,
+      $domain,
+      $feature_list,
+    ];
+    $url = $this->getApiUrl(implode('/', $path_components)) . '?require=';
+    $url .= '?require=' . ($require_all) ? 'all' : 'any';
+
+    $request = $this->getAuthenticatedRequest(self::METHOD_GET, $url, $token);
+
+    $response = $this->getParsedResponse($request);
+
+    return TRUE;
+  }
+
+  /**
+   * Builds an URL to the OAuth endpoints.
+   *
+   * @param string $path
+   *   Sub-path to append to the base endpoint.
+   *
+   * @return string
+   *   Complete and valid URL
+   */
+  protected function getApiUrl(string $path): string {
+    // Create the actual full URI path
+    return implode('/', [self::BASE_API_URL, $path]);
   }
 
   /**
    * @inheritDoc
    */
-  public function getSubscriptionList(): SubscriptionList {
-    throw new \RuntimeException("Not implemented");
+  public function getUserPublicationListByAccess(
+    AccessTokenInterface $access_token,
+    AccessFeatureType $feature
+  ): PublicationList {
+    throw new \RuntimeException("Not implemented.");
   }
 
-  /**
-   * @inheritDoc
-   */
-  public function addSubscription() {
-    throw new \RuntimeException("Not implemented");
-  }
-
-  /**
-   * @inheritDoc
-   */
-  public function hasAccess(string $domain, AccessFeatureType $feature): bool {
-    throw new \RuntimeException("Not implemented");
-  }
-
-  /**
-   * @inheritDoc
-   */
-  public function getPublicationListByAccess(AccessFeatureType $feature): PublicationList {
-    throw new \RuntimeException("Not implemented");
-  }
 }
