@@ -19,9 +19,11 @@ class AmediaAid extends AbstractProvider {
 
   use BearerAuthorizationTrait;
 
-  protected const BASE_DOMAIN = 'www.aid.no';
-  protected const BASE_OAUTH_PATH = 'api/portunus/v1/oauth';
-  protected const BASE_API_PATH = 'api/mercury/v2';
+  protected const BASE_API_URL = 'https://www.aid.no/api';
+
+  protected const API_URL_V1_JUPITER = 'jupiter/v1';
+  protected const API_URL_V1_PORTUNUS = 'portunus/v1';
+  protected const API_URL_V2_MERCURY = 'mercury/v2';
 
   /**
    * OAuth scopes, setting predefined and allow override via constructor $options.
@@ -36,38 +38,43 @@ class AmediaAid extends AbstractProvider {
   ];
 
   /**
-   * Returns the base URL for authorizing a client.
+   * @inheritDoc
    *
-   * Eg. https://oauth.service.com/authorize
-   *
-   * @return string
+   * @see  https://developer.api.no/aid/OAuth-authorization#authorization-endpoint---getting-the-authorization-grant-code
    */
   public function getBaseAuthorizationUrl() {
     return $this->getOAuthUrl('authorize');
   }
 
   /**
-   * Returns the base URL for requesting an access token.
+   * @inheritDoc
    *
-   * Eg. https://oauth.service.com/token
-   *
-   * @param array $params
-   * @return string
+   * @see https://developer.api.no/aid/OAuth-authorization#token-endpoint---getting-the-access-token
    */
   public function getBaseAccessTokenUrl(array $params) {
     return $this->getOAuthUrl('token');
   }
 
   /**
-   * Returns the URL for requesting the resource owner's details.
+   * @inheritDoc
    *
-   * @param AccessToken $token
-   * @return string
+   * @see https://developer.api.no/aid/OAuth-services#user-info-me-endpoint
    */
   public function getResourceOwnerDetailsUrl(AccessToken $token) {
-    return $this->getApiUrl('users/me');
+    // Create the actual full URI path
+    return implode(
+      '/',
+      [
+        self::BASE_API_URL,
+        self::URL_API_V2_MERCURY,
+        'users/me',
+      ]
+    );
   }
 
+  /**
+   * @inheritDoc
+   */
   protected function getDefaultHeaders() {
     $http_headers = parent::getDefaultHeaders();
 
@@ -77,38 +84,25 @@ class AmediaAid extends AbstractProvider {
   }
 
   /**
-   * Returns the default scopes used by this provider.
-   *
-   * This should only be the scopes that are required to request the details
-   * of the resource owner, rather than all the available scopes.
-   *
-   * @return array
+   * @inheritDoc
    */
   protected function getDefaultScopes() {
     if (!is_array($this->scopes)) {
-      throw new \InvalidArgumentException('The oaUth scopes MUST be an array');
+      throw new \InvalidArgumentException('The oauth scopes MUST be an array.');
     }
 
     return $this->scopes;
   }
 
   /**
-   * Returns the string that should be used to separate scopes when building
-   * the URL for requesting an access token.
-   *
-   * @return string Scope separator, defaults to ' ', which encoded with RFC1738 becomes a `+`
+   * @inheritDoc
    */
   protected function getScopeSeparator() {
     return ' ';
   }
 
   /**
-   * Checks a provider response for errors.
-   *
-   * @throws IdentityProviderException
-   * @param  ResponseInterface $response
-   * @param  array|string $data Parsed response data
-   * @return void
+   * @inheritDoc
    */
   protected function checkResponse(ResponseInterface $response, $data) {
     $statusCode = $response->getStatusCode();
@@ -121,30 +115,19 @@ class AmediaAid extends AbstractProvider {
   }
 
   /**
-   * Generates a resource owner object from a successful resource owner
-   * details request.
-   *
-   * @param  array $response
-   * @param  AccessToken $token
-   * @return ResourceOwnerInterface
+   * @inheritDoc
    */
   protected function createResourceOwner(array $response, AccessToken $token) {
     return Profile::createFromApiResponse($response);
   }
 
   /**
-   * Build a query string from an array.
-   *
-   * @note aMedia aID seems to use RFC1738 instead of oauth2 standard RFC3986
-   *
-   * @param array $params
-   *
-   * @return string
+   * @inheritDoc
    */
   protected function buildQueryString(array $params) {
+    // aID uses RFC1738 for query string decode instead of oauth2 standard RFC3986.
     return http_build_query($params, null, '&', \PHP_QUERY_RFC1738);
   }
-
 
   /**
    * Builds an URL to the OAuth endpoints.
@@ -156,35 +139,23 @@ class AmediaAid extends AbstractProvider {
    *   Complete and valid URL
    */
   protected function getOAuthUrl(string $path): string {
-    return sprintf('https://%s/%s/%s', self::BASE_DOMAIN, self::BASE_OAUTH_PATH, $path);
+    // Create the actual full URI path
+    return implode(
+      '/',
+      [
+        self::BASE_API_URL,
+        self::URL_API_V1_PORTUNUS,
+        'oauth',
+        $path,
+      ]
+    );
   }
 
   /**
-   * Builds an URL to the API endpoints.
-   *
-   * @param string $path
-   *   Sub-path to append to the base api endpoint.
-   *
-   * @return string
-   *   Complete and valid URL
-   */
-  protected function getApiUrl(string $path): string {
-    return sprintf('https://%s/%s/%s', self::BASE_DOMAIN, self::BASE_API_PATH, $path);
-  }
-
-
-  /**
-   * Attempts to refresh an access token.
-   *
-   * @todo: this is not currently supported by aMedia
-   *
-   * @param \League\OAuth2\Client\Token\AccessToken $accessToken
-   *
-   * @return \League\OAuth2\Client\Token\AccessToken
-   *   The renewed access_token and relative refresh_token.
+   * @internal: this is not currently supported by aMedia
    */
   private function refreshAccessToken(AccessToken $accessToken) {
-    throw new \BadMethodCallException('Refreshing token is not yet supported');
+    throw new \BadMethodCallException('Refreshing token is not yet supported by aID.');
 
     $fresh_access_token = $this->getAccessToken(
       'refresh_token',
