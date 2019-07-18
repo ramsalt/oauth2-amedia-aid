@@ -66,7 +66,7 @@ class AmediaAid extends AbstractProvider {
       '/',
       [
         self::BASE_API_URL,
-        self::URL_API_V2_MERCURY,
+        self::API_URL_V2_MERCURY,
         'users/me',
       ]
     );
@@ -144,7 +144,7 @@ class AmediaAid extends AbstractProvider {
       '/',
       [
         self::BASE_API_URL,
-        self::URL_API_V1_PORTUNUS,
+        self::API_URL_V1_PORTUNUS,
         'oauth',
         $path,
       ]
