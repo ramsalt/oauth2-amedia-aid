@@ -19,6 +19,21 @@ class AmediaAid extends AbstractProvider {
 
   use BearerAuthorizationTrait;
 
+  protected const ALLOWED_OAUTH_SCOPES = [
+    'uuid'                => "UUID",
+    'id'                  => "ID",
+    'name'                => "User name",
+    'avatar'              => "Avara image",
+    'email'               => "Email address",
+    'phone'               => "Phone number",
+    'birth_date'          => "Birth date",
+    'tracking_key'        => "Tracking Key",
+    'groups'              => "User groups",
+    'access'              => "Access features",
+    'external_accounts'   => "External account",
+    'privacy_preferences' => "User privacy preferences",
+  ];
+
   protected const BASE_API_URL = 'https://www.aid.no/api';
 
   protected const API_URL_V1_JUPITER = 'jupiter/v1';
@@ -36,6 +51,20 @@ class AmediaAid extends AbstractProvider {
     'avatar',
     'email',
   ];
+
+  /**
+   * Website URL to use to show
+   * @var string
+   */
+  protected $website;
+
+  /**
+   * @return array
+   *   List of scopes
+   */
+  public static function getAllowedScopes(): array {
+    return static::ALLOWED_OAUTH_SCOPES;
+  }
 
   /**
    * @inheritDoc
