@@ -75,5 +75,7 @@ class AccessFeatureType {
     foreach ($list as &$item) {
       $item = (string) $item;
     }
+
+    return $list;
   }
 }
