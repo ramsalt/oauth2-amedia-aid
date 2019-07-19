@@ -10,6 +10,8 @@ use AmediaId\Api\DataModel\PrivacyInfo;
 use AmediaId\Api\DataModel\Profile;
 use AmediaId\Api\DataModel\PublicationList;
 use AmediaId\Api\DataModel\SubscriptionList;
+use AmediaId\Api\DataModel\SubscriptionSource;
+use League\OAuth2\Client\Token\AccessToken;
 use League\OAuth2\Client\Token\AccessTokenInterface;
 
 /**
@@ -20,11 +22,16 @@ use League\OAuth2\Client\Token\AccessTokenInterface;
 interface OauthUserServicesInterface {
 
   /**
+   * Special value of the UUIDs to reflect the same user making the request.
+   */
+  public const UUID_SELF = 'me';
+
+  /**
    * These services are used to get information about users.
    *
    * @see https://developer.api.no/aid/OAuth-services#user-info-me-endpoint
    *
-   * @param AccessTokenInterface $access_token
+   * @param AccessToken $access_token
    *   User access token, for identification.
    *
    * @return \AmediaId\Api\DataModel\Profile
@@ -32,7 +39,7 @@ interface OauthUserServicesInterface {
    *
    * @throws \AmediaId\Api\Exception\OauthServiceException
    */
-  public function getUserInfo(AccessTokenInterface $access_token): Profile;
+  public function getUserInfo(AccessToken $access_token): Profile;
 
   /**
    * Loads a list of user groups.
@@ -62,14 +69,18 @@ interface OauthUserServicesInterface {
   /**
    * Returns a list of subscriptions.
    *
+   * @see https://developer.api.no/aid/OAuth-services#user-subscriptions---list
+   *
    * @param AccessTokenInterface $access_token
    *   User access token, for identification.
-   *
-   * @see https://developer.api.no/aid/OAuth-services#user-subscriptions---list
+   * @param string $domain
+   *   Domain name to use as identifier.
+   * @param \AmediaId\Api\DataModel\SubscriptionSource $source
+   *   Subscription system owning the subscription
    *
    * @return SubscriptionList
    */
-  public function getUserSubscriptionList(AccessTokenInterface $access_token): SubscriptionList;
+  public function getUserSubscriptionList(AccessTokenInterface $access_token, string $domain, SubscriptionSource $source): SubscriptionList;
 
   /**
    * If you need to check if a user has access to a certain publication, this is the endpoint to use.
@@ -94,9 +105,10 @@ interface OauthUserServicesInterface {
    *
    * @param AccessTokenInterface $access_token
    *   User access token, for identification.
-   * @param \AmediaId\Api\DataModel\AccessFeatureType $feature
+   * @param string|\AmediaId\Api\DataModel\AccessFeatureType $feature
+   *   Access feature, can be string or AccessFeatureType.
    *
    * @return \AmediaId\Api\DataModel\PublicationList
    */
-  public function getUserPublicationListByAccess(AccessTokenInterface $access_token, AccessFeatureType $feature): PublicationList;
+  public function getUserPublicationListByAccess(AccessTokenInterface $access_token, $feature): PublicationList;
 }

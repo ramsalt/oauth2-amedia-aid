@@ -6,18 +6,29 @@ namespace AmediaId\Api\DataModel;
 class SubscriptionList extends \SplFixedArray {
 
   /**
+   * Builds an object based on the raw api response.
+   *
+   * @see https://developer.api.no/aid/OAuth-services#user-subscriptions---list
+   *
+   * @param array $api_response
+   *   Parsed json array as returned from the api.
+   *
+   * @return \AmediaId\Api\DataModel\SubscriptionList
+   */
+  public static function fromApiResponseArray(array $api_response): SubscriptionList {
+    return static::fromArray($api_response['subscriptions'] ?? []);
+  }
+
+  /**
    * @inheritDoc
    */
-  public static function fromArray(array $groups): SubscriptionList {
-    throw new \BadMethodCallException("Not implemented");
-
-    $groupObjects = [];
-    foreach ($groups as $group) {
-      // @TODO
-      $groupObjects[] = new Subscription();
+  public static function fromArray(array $subscription_list): SubscriptionList {
+    $subscriptions = [];
+    foreach ($groups as $subsription_data) {
+      $subscriptions[] = Subscription::fromArray($subsription_data);
     }
 
-    return parent::fromArray($groupObjects, TRUE);
+    return parent::fromArray($subscriptions, TRUE);
   }
 
   /**
@@ -40,6 +51,4 @@ class SubscriptionList extends \SplFixedArray {
   public function next(): Subscription {
     parent::next();
   }
-
-
 }

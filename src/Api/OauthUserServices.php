@@ -9,14 +9,24 @@ use AmediaId\Api\DataModel\PrivacyInfo;
 use AmediaId\Api\DataModel\Profile;
 use AmediaId\Api\DataModel\PublicationList;
 use AmediaId\Api\DataModel\SubscriptionList;
+use AmediaId\Api\DataModel\SubscriptionSource;
+use InvalidArgumentException;
+use League\OAuth2\Client\Token\AccessToken;
 use League\OAuth2\Client\Token\AccessTokenInterface;
 use Ramsalt\OAuth2\Client\Provider\AmediaAid;
 
+/**
+ * Class OauthUserServices
+ *
+ * @package AmediaId\Api
+ */
 class OauthUserServices extends AmediaAid implements OauthUserServicesInterface {
 
   protected const ENDPOINT_USERS = self::API_URL_V2_MERCURY . '/users';
 
   protected const ENDPOINT_FEATURES = self::API_URL_V1_JUPITER . '/access_features';
+
+  protected const ENDPOINT_PUBLICATIONS = self::API_URL_V1_JUPITER . '/publications';
 
   /**
    * @inheritDoc
@@ -33,7 +43,8 @@ class OauthUserServices extends AmediaAid implements OauthUserServicesInterface 
   /**
    * @inheritDoc
    */
-  public function getUserInfo(AccessTokenInterface $access_token): Profile {
+  public function getUserInfo(AccessToken $access_token): Profile {
+    /** @noinspection PhpIncompatibleReturnTypeInspection */
     return $this->getResourceOwner($access_token);
   }
 
@@ -54,8 +65,20 @@ class OauthUserServices extends AmediaAid implements OauthUserServicesInterface 
   /**
    * @inheritDoc
    */
-  public function getUserSubscriptionList(AccessTokenInterface $access_token): SubscriptionList {
-    throw new \RuntimeException("Not implemented.");
+  public function getUserSubscriptionList(AccessTokenInterface $access_token, string $domain, SubscriptionSource $source): SubscriptionList {
+    $path_components = [
+      self::ENDPOINT_USERS,
+      self::UUID_SELF,
+      'subscriptions',
+      $domain,
+      (string) $source,
+    ];
+    $url = $this->getApiUrl(implode('/', $path_components));
+
+    $request = $this->getAuthenticatedRequest(self::METHOD_GET, $url, $access_token);
+    $response = $this->getParsedResponse($request);
+
+    return SubscriptionList::fromApiResponseArray($response);
   }
 
   /**
@@ -76,11 +99,52 @@ class OauthUserServices extends AmediaAid implements OauthUserServicesInterface 
     $url = $this->getApiUrl(implode('/', $path_components)) . '?require=';
     $url .= '?require=' . ($require_all) ? 'all' : 'any';
 
-    $request = $this->getAuthenticatedRequest(self::METHOD_GET, $url, $token);
+    $request = $this->getAuthenticatedRequest(self::METHOD_GET, $url, $access_token);
 
     $response = $this->getParsedResponse($request);
 
-    return TRUE;
+    return $response['access'] === TRUE;
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public function getUserPublicationListByAccess(AccessTokenInterface $access_token, $feature): PublicationList {
+    $path_components = [
+      self::ENDPOINT_PUBLICATIONS,
+      (string) $this->validateAccessFeature($feature),
+    ];
+    $url = $this->getApiUrl(implode('/', $path_components));
+
+    $request = $this->getAuthenticatedRequest(self::METHOD_GET, $url, $access_token);
+    $response = $this->getParsedResponse($request);
+
+    return PublicationList::fromArray($response);
+  }
+
+  /**
+   * Validates an access feature type.
+   *
+   * @param string|\AmediaId\Api\DataModel\AccessFeatureType $item
+   *   The item to ba validated.
+   *
+   * @return \AmediaId\Api\DataModel\AccessFeatureType
+   *   The validated access feature object.
+   *
+   * @throws \InvalidArgumentException
+   *   If the validation fails.
+   */
+  protected function validateAccessFeature($item) {
+    // Ensure we get a valid value as paameter.
+    if (!is_string($item) && !is_a($item, AccessFeatureType::class)) {
+      throw new InvalidArgumentException("Feature argument MUST be a string or an AccessFeatureType object.");
+    }
+    elseif (is_string($item)) {
+      // Validate the feature if passed as sring, by creating the object will throw an exception if is not valid.
+      $item = new AccessFeatureType($item);
+    }
+
+    return $item;
   }
 
   /**
@@ -96,15 +160,4 @@ class OauthUserServices extends AmediaAid implements OauthUserServicesInterface 
     // Create the actual full URI path
     return implode('/', [self::BASE_API_URL, $path]);
   }
-
-  /**
-   * @inheritDoc
-   */
-  public function getUserPublicationListByAccess(
-    AccessTokenInterface $access_token,
-    AccessFeatureType $feature
-  ): PublicationList {
-    throw new \RuntimeException("Not implemented.");
-  }
-
 }
