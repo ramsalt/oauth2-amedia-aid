@@ -4,6 +4,7 @@ namespace Ramsalt\OAuth2\Client\Provider;
 
 use AmediaId\Api\DataModel\Profile;
 use AmediaId\Api\Exception\AccessDeniedException;
+use InvalidArgumentException;
 use League\OAuth2\Client\Provider\AbstractProvider;
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use League\OAuth2\Client\Provider\ResourceOwnerInterface;
@@ -118,7 +119,7 @@ class AmediaAid extends AbstractProvider {
    */
   protected function getDefaultScopes() {
     if (!is_array($this->scopes)) {
-      throw new \InvalidArgumentException('The oauth scopes MUST be an array.');
+      throw new InvalidArgumentException('The oauth scopes MUST be an array.');
     }
 
     return $this->scopes;
@@ -141,7 +142,6 @@ class AmediaAid extends AbstractProvider {
       $message = $data["errors"][0]["title"] ?? $response->getReasonPhrase();
       throw new AccessDeniedException($message, $data);
     }
-
   }
 
   /**

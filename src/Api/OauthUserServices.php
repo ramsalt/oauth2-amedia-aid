@@ -100,7 +100,6 @@ class OauthUserServices extends AmediaAid implements OauthUserServicesInterface 
     $url .= '?require=' . ($require_all) ? 'all' : 'any';
 
     $request = $this->getAuthenticatedRequest(self::METHOD_GET, $url, $access_token);
-
     $response = $this->getParsedResponse($request);
 
     return $response['access'] === TRUE;
