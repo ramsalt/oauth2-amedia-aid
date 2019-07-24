@@ -84,8 +84,8 @@ class OauthUserServices extends AmediaAid implements OauthUserServicesInterface 
   /**
    * @inheritDoc
    */
-  public function userHasAccess(AccessTokenInterface $access_token, string $domain, $features, $require_all = TRUE): bool {
-    // Ensure we always handle a aray of Access Features.
+  public function userHasAccess(AccessTokenInterface $access_token, string $domain, $features, bool $require_all = TRUE): bool {
+    // Ensure we always handle a array of Access Features.
     if (!is_array($features)) {
       $features = [$features];
     }
